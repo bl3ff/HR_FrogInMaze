@@ -27,25 +27,28 @@ public class Solution {
     }
 
     static class FMaze {
+        public static final String SEPARATOR = " ";
 
         enum CellTypeEnum{
+            NONE,
             WALL,
             FREE,
             MINE,
             EXIT;
 
-            public CellTypeEnum convert(String c){
+            public static CellTypeEnum convert(String c){
                 switch(c){
                     case "#": return WALL;
                     case "O": return FREE;
                     case "*": return MINE;
                     case "A": return FREE;
                     case "%": return EXIT;
+                    default: return NONE;
                 }
             }
         }
 
-        int startX, startY;
+        int sX, sY;
         int nTunnels;
         CellTypeEnum[][] maze;
         public FMaze(int n, int m, int k){
@@ -53,8 +56,15 @@ public class Solution {
             nTunnels = k;
         }
 
-        public void fillMaze(){
-
+        public void fillMaze(int i, String r){
+            String[] s = r.split(SEPARATOR);
+            for (int j=0; j< s.length;j++){
+                maze[i][j] = CellTypeEnum.convert(s[j]);
+                if(s[j].equals("A")){
+                    sX = i;
+                    sY = j;
+                }
+            }
         }
     }
 }
