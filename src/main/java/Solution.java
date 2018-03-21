@@ -1,11 +1,4 @@
-
-import com.sun.org.apache.bcel.internal.generic.FMUL;
-
-import java.io.*;
 import java.util.*;
-import java.text.*;
-import java.math.*;
-import java.util.regex.*;
 
 public class Solution {
 
@@ -20,11 +13,8 @@ public class Solution {
             maze.fillMaze(a0,row);
         }
         for(int a0 = 0; a0 < k; a0++){
-            int i1 = in.nextInt();
-            int j1 = in.nextInt();
-            int i2 = in.nextInt();
-            int j2 = in.nextInt();
-            // Write Your Code Here
+            String row = in.next();
+            maze.fillTunnel(a0,row);
         }
         // Write Your Code Here
     }
@@ -52,11 +42,12 @@ public class Solution {
         }
 
         int sX, sY;
-        int nTunnels;
+        Map<String, int[]> tunnels;
         CellTypeEnum[][] maze;
+        
         public FMaze(int n, int m, int k){
             maze = new CellTypeEnum[n][m];
-            nTunnels = k;
+            tunnels = new HashMap<>(2*k);
         }
 
         public void fillMaze(int i, String r){
@@ -69,7 +60,20 @@ public class Solution {
                 }
             }
         }
+
+        public void fillTunnel(int i, String r){
+            String[] s = r.split(SEPARATOR);
+            int[] v1 = new int[2];
+            v1[0] = Integer.parseInt(s[2]);
+            v1[1] = Integer.parseInt(s[3]);
+            tunnels.put(s[0]+SEPARATOR+s[1], v1);
+            v1[0] = Integer.parseInt(s[0]);
+            v1[1] = Integer.parseInt(s[1]);
+            tunnels.put(s[2]+SEPARATOR+s[3], v1);
+        }
     }
+
+
 }
 
 
