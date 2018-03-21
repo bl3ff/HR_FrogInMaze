@@ -1,4 +1,6 @@
 
+import com.sun.org.apache.bcel.internal.generic.FMUL;
+
 import java.io.*;
 import java.util.*;
 import java.text.*;
@@ -12,9 +14,10 @@ public class Solution {
         int n = in.nextInt();
         int m = in.nextInt();
         int k = in.nextInt();
+        FMaze maze = new FMaze(n,m,k);
         for(int a0 = 0; a0 < n; a0++){
             String row = in.next();
-            // Write Your Code Here
+            maze.fillMaze(a0,row);
         }
         for(int a0 = 0; a0 < k; a0++){
             int i1 = in.nextInt();
