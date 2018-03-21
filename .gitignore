@@ -1,0 +1,12 @@
+
+.gradle/3.5-rc-2/taskHistory/taskHistory.lock
+.gradle/buildOutputCleanup/built.bin
+.gradle/buildOutputCleanup/cache.properties
+*.bin
+*.lock
+*.xml
+*.iml
+*.jar
+*.properties
+gradlew
+gradlew.bat
