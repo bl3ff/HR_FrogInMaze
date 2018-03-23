@@ -12,7 +12,7 @@ public class Solution {
 
     public static void main(String[] args) {
         try {
-            System.setIn(new FileInputStream(new File("input00.txt")));
+            System.setIn(new FileInputStream(new File("input24.txt")));
         }
         catch (FileNotFoundException e){
             e.printStackTrace();
