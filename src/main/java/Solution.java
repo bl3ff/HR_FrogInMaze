@@ -3,7 +3,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -36,8 +35,8 @@ public class Solution {
             maze.fillTunnel(i1,j1,i2,j2);
         }
         maze.depthFirstSearch();
-        maze.dbPMatrix();
-
+        //maze.dbPMatrix();
+        System.out.print(maze.computeP());
     }
 
     public enum CellTypeEnum{
@@ -61,16 +60,19 @@ public class Solution {
 
     static class FMaze {
         public static final String SEPARATOR = " ";
+        private static final double EPSILON = 1e-10;
 
         private int n, m, sX, sY;
         private Map<Integer,Node> tunnels;
         private Map<Integer,Node> mazeNode;
-        private int[][] pMatrix;
+        private double[][] pMatrix;
+        private double[] pRes;
         public FMaze(int n, int m, int k){
             this.n = n;
             this.m = m;
             mazeNode = new HashMap<>(n*m);
-            pMatrix = new int[n*m+1][n*m+1];
+            pMatrix = new double[n*m][n*m];
+            pRes = new double[n*m];
             tunnels = new HashMap<>(k);
         }
 
@@ -100,14 +102,15 @@ public class Solution {
             while (!unvisitedNode.isEmpty()){
                 Node tmp = unvisitedNode.remove(0);
 
-                if(visitedNode.contains(tmp)) continue;
+                if(visitedNode.contains(tmp) /*|| tmp.type.equals(CellTypeEnum.MINE) /*p in questo caso e' zero*/) continue;
+                visitedNode.add(tmp);
 
+                final int pIndex = tmp.index;
                 if(tunnels.containsKey(getKey(tmp.x,tmp.y))) {
-                    System.out.print("tunnell: "  + tmp + "->");
+                    //System.out.print("tunnell: "  + tmp + "->");
                     tmp = tunnels.get(getKey(tmp.x, tmp.y));
-                    System.out.println(tmp);
+                    //System.out.println(tmp);
                 }
-
                 final Node currN = tmp;
 
                 List<Node> children = getChildren(currN)
@@ -116,28 +119,26 @@ public class Solution {
                         .filter(n -> n.type != CellTypeEnum.WALL)
                         .collect(Collectors.toList());
 
-                PMatrixCreator pmCreator = children.
-                        stream().
+                PMatrixCreator pmCreator = getChildren(currN).
                         map(c -> {
-                          if(c.type == CellTypeEnum.FREE) pMatrix[currN.index][c.index] = -1;
-                          return c;
+                            if(c.type == CellTypeEnum.FREE) pMatrix[pIndex][c.index] = -1;
+                            return c;
                         }).
                         collect(PMatrixCreator::new, PMatrixCreator::accept, PMatrixCreator::combine);
 
                 List<Integer> res = pmCreator.compute();
+
                 if(res.get(0)==0) {
-                    pMatrix[currN.index][currN.index] = 1;
+                    pMatrix[pIndex][pIndex] = 1;
                     return;
                 }
 
-                pMatrix[currN.index][currN.index] += res.get(0);
-                pMatrix[currN.index][n*m] = res.get(1);
+                pMatrix[pIndex][pIndex] += res.get(0);
+                pRes[pIndex] = res.get(1);
 
-                System.out.println("Index: "+currN.index +" a:"+res.get(0)+" c:"+res.get(1));
-
-                visitedNode.add(currN);
-                System.out.println("Visited "+currN +" children:");
-                children.forEach(System.out::println);
+                //System.out.println("Index: "+pIndex +" a:"+res.get(0)+" c:"+res.get(1));
+                //System.out.println("Visited "+currN +" children:");
+                //children.forEach(System.out::println);
 
                 unvisitedNode.addAll(0,children);
             }
@@ -158,27 +159,69 @@ public class Solution {
         }
 
         public void dbPMatrix(){
-            for(int i = 0 ; i < n*m+1; i++) {
-                for (int j = 0; j < n * m + 1; j++)
+            for(int i = 0 ; i < n*m; i++) {
+                for (int j = 0; j < n * m; j++)
                     System.out.print(pMatrix[i][j] + SEPARATOR);
-                System.out.println(SEPARATOR);
+                System.out.println(pRes[i] + SEPARATOR);
             }
         }
+
+        public double computeP(){
+            double[] r = gElimination(pMatrix, pRes);
+            return r[getKey(sX,sY)];
+        }
+
+        // Gaussian elimination with partial pivoting
+        private double[] gElimination(double[][] A, double[] b) {
+            int n = b.length;
+
+            for (int p = 0; p < n; p++) {
+
+                // find pivot row and swap
+                int max = p;
+                for (int i = p + 1; i < n; i++) {
+                    if (Math.abs(A[i][p]) > Math.abs(A[max][p])) {
+                        max = i;
+                    }
+                }
+                double[] temp = A[p]; A[p] = A[max]; A[max] = temp;
+                double   t    = b[p]; b[p] = b[max]; b[max] = t;
+
+                // singular or nearly singular
+                if (Math.abs(A[p][p]) <= EPSILON) {
+                    continue;
+                }
+
+                // pivot within A and b
+                for (int i = p + 1; i < n; i++) {
+                    double alpha = A[i][p] / A[p][p];
+                    b[i] -= alpha * b[p];
+                    for (int j = p; j < n; j++) {
+                        A[i][j] -= alpha * A[p][j];
+                    }
+                }
+            }
+
+            // back substitution
+            double[] x = new double[n];
+            for (int i = n - 1; i >= 0; i--) {
+                double sum = 0.0;
+                for (int j = i + 1; j < n; j++) {
+                    sum += A[i][j] * x[j];
+                }
+                if(A[i][i] > EPSILON)
+                    x[i] = (b[i] - sum) / A[i][i];
+            }
+            return x;
+        }
+
     }
 
     static class PMatrixCreator implements Consumer<Node> {
         int a = 0;
         int c = 0;
 
-        public PMatrixCreator(){
-        }
-
         public List<Integer> compute() {
-            if(a == 0) {
-                a = 1;
-                c= -1;
-            }
-
             return Stream.of(a,c).collect(Collectors.toList());
         }
 

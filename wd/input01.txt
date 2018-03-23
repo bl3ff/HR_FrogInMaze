@@ -1,0 +1,8 @@
+5 8 2
+OOOOO#O%
+AOO##OOO
+OO##OOO#
+OO*#OO**
+OOO#OOO%
+1 3 5 1
+1 5 3 5
